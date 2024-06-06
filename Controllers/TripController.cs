@@ -2,10 +2,6 @@
 using APBDLab9.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using APBDLab9.Context;
 
 namespace APBDLab9.Controllers
@@ -22,59 +18,6 @@ namespace APBDLab9.Controllers
             _context = context;
             _logger = logger;
         }
-
-        [HttpGet]
-        public async Task<ActionResult> GetTrips([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
-        {
-            try
-            {
-                if (_context.Trips == null)
-                {
-                    _logger.LogWarning("Trips data not available.");
-                    return NotFound("Trips data not available.");
-                }
-
-                var trips = await _context.Trips
-                    .OrderByDescending(t => t.DateFrom)
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .Select(t => new TripDto
-                    {
-                        Name = t.Name,
-                        Description = t.Description,
-                        DateFrom = t.DateFrom,
-                        DateTo = t.DateTo,
-                        MaxPeople = t.MaxPeople,
-                        Countries = t.IdCountries.Select(ct => new CountryDto
-                        {
-                            Name = ct.Name
-                        }).ToList(),
-                        Clients = t.ClientTrips.Select(ct => new ClientDto
-                        {
-                            FirstName = ct.IdClientNavigation.FirstName,
-                            LastName = ct.IdClientNavigation.LastName
-                        }).ToList()
-                    })
-                    .ToListAsync();
-
-                var totalTrips = await _context.Trips.CountAsync();
-                var totalPages = (int)Math.Ceiling(totalTrips / (double)pageSize);
-
-                return Ok(new
-                {
-                    pageNum = page,
-                    pageSize,
-                    allPages = totalPages,
-                    trips
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred.");
-                return StatusCode(500, "Server error");
-            }
-        }
-
         [HttpPost("{idTrip}/clients")]
         public async Task<ActionResult> AddClientToTrip([FromBody] TripaddClientDto tripAddClientDto, int idTrip)
         {
@@ -124,6 +67,58 @@ namespace APBDLab9.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred .");
+                return StatusCode(500, "Server error");
+            }
+        }
+        
+        [HttpGet]
+        public async Task<ActionResult> GetTrips([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                if (_context.Trips == null)
+                {
+                    _logger.LogWarning("Trips data not available.");
+                    return NotFound("Trips data not available.");
+                }
+
+                var trips = await _context.Trips
+                    .OrderByDescending(t => t.DateFrom)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .Select(t => new TripDto
+                    {
+                        Name = t.Name,
+                        Description = t.Description,
+                        DateFrom = t.DateFrom,
+                        DateTo = t.DateTo,
+                        MaxPeople = t.MaxPeople,
+                        Countries = t.IdCountries.Select(ct => new CountryDto
+                        {
+                            Name = ct.Name
+                        }).ToList(),
+                        Clients = t.ClientTrips.Select(ct => new ClientDto
+                        {
+                            FirstName = ct.IdClientNavigation.FirstName,
+                            LastName = ct.IdClientNavigation.LastName
+                        }).ToList()
+                    })
+                    .ToListAsync();
+
+                var totalTrips = await _context.Trips.CountAsync();
+                var totalPages = (int)Math.Ceiling(totalTrips / (double)pageSize);
+
+                return Ok(new
+                {
+                    pageNum = page,
+                    pageSize,
+                    allPages = totalPages,
+                    trips
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred.");
                 return StatusCode(500, "Server error");
             }
         }

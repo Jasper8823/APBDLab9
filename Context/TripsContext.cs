@@ -9,31 +9,25 @@ public partial class TripsContext : DbContext
 
     public TripsContext(DbContextOptions<TripsContext> options) : base(options) {}
 
-    public virtual DbSet<Client> Clients { get; set; }
+    public virtual DbSet<Client> Clients { get; }
 
-    public virtual DbSet<ClientTrip> ClientTrips { get; set; }
+    public virtual DbSet<ClientTrip> ClientTrips { get; }
 
     public virtual DbSet<Country> Countries { get; set; }
-
-    public virtual DbSet<Trip> Trips { get; set; }
-
+    public virtual DbSet<Trip> Trips { get; }
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => optionsBuilder.UseSqlServer("Data Source=DESKTOP-4HDS9ES\\SQLEXPRESS02;Initial Catalog=apbddb;Integrated Security=True;Trust Server Certificate=True;");
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Client>(entity =>
         {
             entity.HasKey(e => e.IdClient).HasName("Client_pk");
-
             entity.ToTable("Client");
-
             entity.Property(e => e.Email).HasMaxLength(120);
             entity.Property(e => e.FirstName).HasMaxLength(120);
             entity.Property(e => e.LastName).HasMaxLength(120);
             entity.Property(e => e.Pesel).HasMaxLength(120);
             entity.Property(e => e.Telephone).HasMaxLength(120);
         });
-
         modelBuilder.Entity<ClientTrip>(entity =>
         {
             entity.HasKey(e => new { e.IdClient, e.IdTrip }).HasName("Client_Trip_pk");
@@ -53,7 +47,6 @@ public partial class TripsContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("Table_5_Trip");
         });
-
         modelBuilder.Entity<Country>(entity =>
         {
             entity.HasKey(e => e.IdCountry).HasName("Country_pk");
@@ -79,7 +72,6 @@ public partial class TripsContext : DbContext
                         j.ToTable("Country_Trip");
                     });
         });
-
         modelBuilder.Entity<Trip>(entity =>
         {
             entity.HasKey(e => e.IdTrip).HasName("Trip_pk");
@@ -91,9 +83,6 @@ public partial class TripsContext : DbContext
             entity.Property(e => e.Description).HasMaxLength(220);
             entity.Property(e => e.Name).HasMaxLength(120);
         });
-
-        OnModelCreatingPartial(modelBuilder);
     }
-
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }
